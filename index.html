@@ -1,0 +1,1225 @@
+<!DOCTYPE html>
+<html lang="uk"><head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Приймання роботи — CLO 3D, Заняття 2</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@400;500;600;700&amp;family=IBM+Plex+Mono:wght@400;500;600&amp;family=IBM+Plex+Sans:wght@400;500;600&amp;display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#E9F0F7; --paper-card:#F4F8FC;
+  --grid-fine:rgba(43,101,164,.11); --grid-bold:rgba(43,101,164,.22);
+  --blue:#2B65A4; --blue-deep:#153E6B;
+  --ink:#0E2338; --ink-soft:#54718D; --ink-mid:#33546F;
+  --tape:#EBD9A6; --accent:#E0492C; --green:#1B7A55; --red:#C7322A;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{
+  font-family:'IBM Plex Sans',system-ui,sans-serif;color:var(--ink);
+  background-color:var(--paper);
+  background-image:
+    linear-gradient(var(--grid-fine) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid-fine) 1px,transparent 1px),
+    linear-gradient(var(--grid-bold) 1px,transparent 1px),
+    linear-gradient(90deg,var(--grid-bold) 1px,transparent 1px);
+  background-size:8px 8px,8px 8px,40px 40px,40px 40px;
+  background-position:-1px -1px,-1px -1px,-1px -1px,-1px -1px;
+  min-height:100vh;line-height:1.55;padding:18px 14px 60px;
+}
+.wrap{max-width:840px;margin:0 auto}
+.eyebrow{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);font-weight:500}
+h1,h2,h3{font-family:'Oswald',sans-serif;font-weight:600;letter-spacing:.02em;line-height:1.1}
+
+.sheet{position:relative;background:var(--paper-card);border:1.5px dashed var(--blue);padding:26px 24px;margin-bottom:20px}
+.crop{position:absolute;width:16px;height:16px;pointer-events:none}
+.crop::before,.crop::after{content:'';position:absolute;background:var(--blue-deep)}
+.crop::before{width:16px;height:1.5px}
+.crop::after{width:1.5px;height:16px}
+.crop.tl{top:-7px;left:-7px}
+.crop.tr{top:-7px;right:-7px}
+.crop.tr::before{right:0}.crop.tr::after{right:0}
+.crop.bl{bottom:-7px;left:-7px}
+.crop.bl::before{bottom:0}.crop.bl::after{bottom:0}
+.crop.br{bottom:-7px;right:-7px}
+.crop.br::before{bottom:0;right:0}.crop.br::after{bottom:0;right:0}
+.notch{position:absolute;background:var(--blue-deep);pointer-events:none}
+.notch.top{top:0;left:50%;width:1.5px;height:9px;transform:translateX(-50%)}
+.notch.top2{top:0;left:28%;width:1.5px;height:9px}
+.notch.bot{bottom:0;left:50%;width:1.5px;height:9px;transform:translateX(-50%)}
+.notch.lft{left:0;top:38%;height:1.5px;width:9px}
+.notch.rgt{right:0;top:62%;height:1.5px;width:9px}
+
+.titleblock{display:grid;grid-template-columns:1fr auto;border:1.5px solid var(--blue-deep);background:var(--paper-card);margin-bottom:16px}
+.tb-main{padding:12px 16px;border-right:1.5px solid var(--blue-deep)}
+.tb-main h1{font-size:clamp(20px,5vw,32px);text-transform:uppercase;color:var(--blue-deep)}
+.tb-main .sub{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.13em;text-transform:uppercase;color:var(--ink-soft);margin-top:3px}
+.tb-cells{display:grid;grid-template-rows:1fr 1fr;min-width:132px}
+.tb-cell{padding:7px 12px;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-soft);display:flex;flex-direction:column;justify-content:center}
+.tb-cell+.tb-cell{border-top:1.5px solid var(--blue-deep)}
+.tb-cell b{font-size:14px;letter-spacing:.04em;color:var(--blue-deep);font-weight:600}
+
+.actbar{margin:0 0 22px;padding:0 2px}
+.act-head{display:flex;justify-content:space-between;align-items:baseline;margin-bottom:7px}
+.act-label{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft)}
+.act-cells{display:flex;gap:5px}
+.act-cell{flex:1;min-width:0;height:28px;display:grid;place-items:center;
+  border:1.5px solid rgba(43,101,164,.5);background:var(--paper-card);
+  font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--ink-soft);
+  transition:background .2s,border-color .2s,color .2s}
+.act-cell.cur{border-color:var(--blue-deep);border-width:2.5px;color:var(--blue-deep)}
+.act-cell.ok{background:rgba(27,122,85,.14);border-color:var(--green);color:var(--green)}
+.act-cell.no{background:rgba(199,50,42,.11);border-color:var(--red);color:var(--red)}
+.act-cell.pop{animation:pop .35s ease}
+@keyframes pop{0%{transform:scale(1)}45%{transform:scale(1.16)}100%{transform:scale(1)}}
+.hero{display:grid;grid-template-columns:1fr 250px;gap:26px;align-items:center}
+@media(max-width:660px){.hero{grid-template-columns:1fr}.hero-art{order:-1;max-width:210px;margin:0 auto}}
+.lead{font-size:16.5px;color:var(--ink-mid);margin-top:12px}
+.lead b{color:var(--ink);font-weight:600}
+.rules{list-style:none;margin:20px 0 0;padding:0}
+.rules li{position:relative;padding-left:26px;margin-bottom:9px;font-size:14.5px;color:var(--ink-mid)}
+.rules li::before{content:'';position:absolute;left:2px;top:9px;width:11px;height:1.5px;background:var(--accent)}
+.blocks-preview{display:flex;flex-wrap:wrap;gap:6px;margin-top:20px}
+.blk-chip{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;padding:4px 9px;border:1px dashed var(--blue);color:var(--blue-deep)}
+
+.btn{font-family:'Oswald',sans-serif;font-size:16px;font-weight:600;letter-spacing:.09em;text-transform:uppercase;
+  background:var(--blue-deep);color:#fff;border:none;padding:13px 30px;cursor:pointer;
+  box-shadow:4px 4px 0 rgba(21,62,107,.22);transition:transform .12s,box-shadow .12s}
+.btn:hover{transform:translate(1px,1px);box-shadow:3px 3px 0 rgba(21,62,107,.22)}
+.btn:active{transform:translate(4px,4px);box-shadow:0 0 0 rgba(21,62,107,.22)}
+.btn.accent{background:var(--accent);box-shadow:4px 4px 0 rgba(224,73,44,.25)}
+.btn.ghost{background:transparent;color:var(--blue-deep);border:1.5px dashed var(--blue);box-shadow:none;font-size:13px;padding:9px 20px}
+.btn.ghost:hover{background:rgba(43,101,164,.07);transform:none;box-shadow:none}
+.btn.sm{font-size:12px;padding:7px 14px;box-shadow:2px 2px 0 rgba(21,62,107,.2)}
+.btn:focus-visible,.opt:focus-visible,.check-item:focus-visible,a:focus-visible,input:focus-visible,textarea:focus-visible,select:focus-visible{outline:2.5px solid var(--accent);outline-offset:2px}
+
+.q-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;margin-bottom:16px}
+.chip{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--blue-deep);border:1px solid var(--blue);padding:3px 9px;background:rgba(43,101,164,.06)}
+.field-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+.situation{border-left:3px solid var(--accent);padding:10px 0 10px 16px;margin:6px 0 22px;font-size:17px;line-height:1.5}
+@media(max-width:520px){.situation{font-size:16px}}
+.ask{font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:.07em;text-transform:uppercase;color:var(--blue-deep);margin-bottom:12px}
+.opts{display:grid;gap:9px}
+.opt{display:grid;grid-template-columns:32px 1fr;align-items:start;gap:12px;width:100%;text-align:left;
+  font-family:'IBM Plex Sans',sans-serif;font-size:15px;background:var(--paper);
+  border:1.5px solid rgba(43,101,164,.4);padding:13px 15px;cursor:pointer;color:var(--ink);line-height:1.45;
+  transition:border-color .15s,background .15s}
+.opt:hover:not(:disabled){border-color:var(--blue-deep);background:#fff}
+.opt:disabled{cursor:default}
+.opt .key{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:var(--blue);
+  border:1px solid var(--blue);width:24px;height:24px;display:grid;place-items:center;flex-shrink:0;margin-top:-1px}
+.opt.correct{border-color:var(--green);background:rgba(27,122,85,.09)}
+.opt.correct .key{border-color:var(--green);background:var(--green)}
+.opt.correct .key::after{content:'✓';color:#fff}
+.opt.correct .key span{display:none}
+.opt.wrong{border-color:var(--red);background:rgba(199,50,42,.08)}
+.opt.wrong .key{border-color:var(--red);color:#fff;background:var(--red)}
+.opt.wrong .key::after{content:'✕'}
+.opt.wrong .key span{display:none}
+.opt.dim{opacity:.45}
+
+.verdict{margin-top:24px;animation:fade .3s ease}
+@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.stamp{display:inline-block;transform:rotate(-6deg);font-family:'Oswald',sans-serif;font-size:19px;font-weight:700;
+  letter-spacing:.14em;text-transform:uppercase;padding:6px 18px;border:2.5px solid currentColor;
+  box-shadow:inset 0 0 0 1.5px currentColor;margin:4px 0 26px 6px}
+.stamp.ok{color:var(--green)}
+.stamp.no{color:var(--red)}
+.answer-note{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.05em;color:var(--ink-soft);margin:-6px 0 14px}
+.answer-note b{color:var(--ink);font-weight:600}
+.explain{background:rgba(43,101,164,.07);border:1px solid rgba(43,101,164,.28);padding:15px 17px;font-size:15px;line-height:1.6;color:var(--ink-mid)}
+.explain-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--blue);margin-bottom:6px}
+.lesson-link{display:inline-flex;align-items:center;gap:8px;margin-top:14px;font-family:'IBM Plex Mono',monospace;
+  font-size:12px;letter-spacing:.07em;color:var(--blue-deep);text-decoration:none;border-bottom:1.5px dashed var(--blue);padding-bottom:2px}
+.lesson-link:hover{color:var(--accent);border-color:var(--accent)}
+.lesson-link.static{border-bottom-style:dotted;color:var(--ink-soft);cursor:default}
+.lesson-link.static:hover{color:var(--ink-soft);border-color:var(--blue)}
+.q-foot{margin-top:24px;display:flex;justify-content:flex-end}
+
+.result-top{text-align:center;padding:8px 0 4px}
+.big-stamp{display:inline-block;transform:rotate(-4deg);border:3px solid var(--accent);box-shadow:inset 0 0 0 2px var(--accent);padding:16px 30px 14px;margin-bottom:22px;color:var(--accent)}
+.big-stamp .bs-label{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;opacity:.85}
+.big-stamp .bs-rank{font-family:'Oswald',sans-serif;font-size:clamp(23px,6vw,38px);font-weight:700;letter-spacing:.03em;text-transform:uppercase;line-height:1.05;margin:2px 0}
+.big-stamp .bs-score{font-family:'IBM Plex Mono',monospace;font-size:13px;letter-spacing:.14em}
+.rank-desc{font-size:16px;color:var(--ink-mid);max-width:520px;margin:0 auto 6px}
+.mod-bars{display:grid;gap:11px}
+.mod-row{display:grid;grid-template-columns:1fr 74px;gap:14px;align-items:center}
+.mod-name{font-size:13.5px;color:var(--ink-mid)}
+.mod-name .mn{font-family:'IBM Plex Mono',monospace;font-size:11px;letter-spacing:.1em;color:var(--blue);margin-right:7px}
+.mod-track{height:8px;background:rgba(43,101,164,.14);position:relative;margin-top:8px}
+.mod-fill{position:absolute;left:0;top:0;bottom:0;background:var(--blue-deep)}
+.mod-fill.full{background:var(--green)}
+.mod-fill.low{background:var(--accent)}
+.mod-score{font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.06em;color:var(--ink-soft);text-align:right}
+.review-list{list-style:none;padding:0;margin:6px 0 0}
+.review-list li{border-bottom:1px dashed rgba(43,101,164,.4);padding:11px 0;display:flex;gap:12px;align-items:baseline;flex-wrap:wrap}
+.review-list li:last-child{border-bottom:none}
+.review-list .rl-num{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--accent);letter-spacing:.1em;flex-shrink:0}
+.review-list .rl-topic{font-size:15px;font-weight:500}
+.review-list .rl-why{font-size:13.5px;color:var(--ink-soft);width:100%}
+
+.check-item{display:flex;gap:13px;align-items:flex-start;width:100%;text-align:left;background:none;border:none;
+  border-bottom:1px dashed rgba(43,101,164,.4);padding:13px 0;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;color:var(--ink)}
+.check-item:last-child{border-bottom:none}
+.check-box{width:21px;height:21px;border:1.5px solid var(--blue-deep);flex-shrink:0;display:grid;place-items:center;margin-top:2px;transition:background .15s,border-color .15s}
+.check-item.on .check-box{background:var(--green);border-color:var(--green)}
+.check-item.on .check-box::after{content:'✓';color:#fff;font-size:13px;font-weight:700;line-height:1}
+.check-text{font-size:15px;line-height:1.45}
+.check-text small{display:block;font-size:13px;color:var(--ink-soft);margin-top:2px}
+.check-item.on .check-text{color:var(--ink-soft)}
+.check-item.on .check-text b{text-decoration:line-through}
+.check-text b{font-weight:600}
+
+.proto{width:100%;border-collapse:collapse;font-size:13.5px;margin-top:6px}
+.proto th{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);text-align:left;padding:0 8px 8px 0;border-bottom:1.5px solid var(--blue-deep);font-weight:500}
+.proto td{padding:9px 8px 9px 0;border-bottom:1px dashed rgba(43,101,164,.35);vertical-align:top}
+.proto td:first-child{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--blue);width:34px}
+.proto .mk{font-family:'IBM Plex Mono',monospace;font-weight:600;width:26px}
+.proto .mk.ok{color:var(--green)}
+.proto .mk.no{color:var(--red)}
+@media(max-width:560px){
+  .proto,.proto tbody,.proto tr,.proto td{display:block;width:100%}
+  .proto thead{display:none}
+  .proto tr{border-bottom:1px dashed rgba(43,101,164,.35);padding:9px 0}
+  .proto td{border:none;padding:1px 0}
+  .proto td:first-child{display:inline-block;width:auto;margin-right:8px}
+  .proto .mk{display:inline-block;width:auto}
+}
+.result-actions{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;margin-top:6px}
+.foot-note{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-soft);margin-top:26px}
+.hidden{display:none!important}
+
+/* ================= EDITOR ================= */
+.editbar{position:sticky;top:0;z-index:40;background:var(--blue-deep);color:#fff;
+  padding:11px 16px;margin:-18px -14px 18px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.editbar .eb-title{font-family:'Oswald',sans-serif;font-size:15px;letter-spacing:.12em;text-transform:uppercase;margin-right:auto}
+.editbar .eb-title small{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.1em;opacity:.7;text-transform:none}
+.eb-btn{font-family:'IBM Plex Mono',monospace;font-size:11.5px;letter-spacing:.08em;text-transform:uppercase;
+  background:transparent;color:#fff;border:1.5px solid rgba(255,255,255,.5);padding:7px 13px;cursor:pointer}
+.eb-btn:hover{background:rgba(255,255,255,.13)}
+.eb-btn.primary{background:var(--accent);border-color:var(--accent)}
+.eb-btn.primary:hover{background:#c8401f}
+.eb-status{font-family:'IBM Plex Mono',monospace;font-size:10.5px;letter-spacing:.08em;opacity:.85;width:100%}
+
+.ed-sec{margin-bottom:26px}
+.ed-sec > h3{font-family:'Oswald',sans-serif;font-size:19px;text-transform:uppercase;color:var(--blue-deep);letter-spacing:.06em;margin-bottom:4px}
+.ed-sec > .ed-hint{font-size:13.5px;color:var(--ink-soft);margin-bottom:14px}
+
+.ed-card{background:var(--paper-card);border:1.5px solid rgba(43,101,164,.45);padding:18px;margin-bottom:14px}
+.ed-card.invalid{border-color:var(--red);border-width:2px}
+.ed-head{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.ed-idx{font-family:'IBM Plex Mono',monospace;font-size:12px;font-weight:600;color:#fff;background:var(--blue-deep);padding:3px 9px;letter-spacing:.08em}
+.ed-tools{margin-left:auto;display:flex;gap:5px}
+.ed-tool{font-family:'IBM Plex Mono',monospace;font-size:12px;background:transparent;border:1px solid rgba(43,101,164,.5);
+  color:var(--blue-deep);width:28px;height:28px;cursor:pointer;display:grid;place-items:center;padding:0}
+.ed-tool:hover{background:rgba(43,101,164,.1)}
+.ed-tool.danger{color:var(--red);border-color:rgba(199,50,42,.5)}
+.ed-tool.danger:hover{background:rgba(199,50,42,.1)}
+.ed-tool:disabled{opacity:.3;cursor:default}
+.ed-tool:disabled:hover{background:transparent}
+
+.ed-field{margin-bottom:12px}
+.ed-field > label{display:block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.15em;
+  text-transform:uppercase;color:var(--ink-soft);margin-bottom:4px}
+.ed-field input[type=text],.ed-field input[type=url],.ed-field input[type=number],.ed-field textarea,.ed-field select{
+  width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:14.5px;color:var(--ink);
+  background:#fff;border:1.5px solid rgba(43,101,164,.4);padding:9px 11px;line-height:1.45}
+.ed-field textarea{resize:vertical;min-height:72px}
+.ed-field input:focus,.ed-field textarea:focus,.ed-field select:focus{border-color:var(--blue-deep)}
+.ed-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media(max-width:560px){.ed-row{grid-template-columns:1fr}}
+
+.ed-optrow{display:grid;grid-template-columns:auto 1fr auto;gap:9px;align-items:center;margin-bottom:7px}
+.ed-optrow input[type=text]{width:100%;font-family:'IBM Plex Sans',sans-serif;font-size:14.5px;
+  background:#fff;border:1.5px solid rgba(43,101,164,.4);padding:9px 11px;color:var(--ink)}
+.ed-optrow.is-correct input[type=text]{border-color:var(--green);background:rgba(27,122,85,.06)}
+.ed-radio{position:relative;display:grid;place-items:center;width:30px;height:30px;border:1.5px solid rgba(43,101,164,.45);cursor:pointer;background:#fff}
+.ed-radio input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.ed-radio:focus-within{outline:2.5px solid var(--accent);outline-offset:2px}
+.ed-optrow.is-correct .ed-radio{background:var(--green);border-color:var(--green)}
+.ed-optrow.is-correct .ed-radio::after{content:'✓';color:#fff;font-size:14px;font-weight:700}
+.ed-legend{font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-soft);margin-bottom:6px}
+.ed-warn{font-family:'IBM Plex Mono',monospace;font-size:11.5px;color:var(--red);margin-top:8px;letter-spacing:.04em}
+.ed-add{width:100%;border:1.5px dashed var(--blue);background:transparent;color:var(--blue-deep);
+  font-family:'Oswald',sans-serif;font-size:14px;letter-spacing:.1em;text-transform:uppercase;padding:12px;cursor:pointer}
+.ed-add:hover{background:rgba(43,101,164,.07)}
+.ed-guide{background:rgba(224,73,44,.07);border-left:3px solid var(--accent);padding:14px 16px;margin-bottom:24px;font-size:14.5px;color:var(--ink-mid)}
+.ed-guide b{color:var(--ink)}
+.ed-guide code{font-family:'IBM Plex Mono',monospace;font-size:13px;background:rgba(21,62,107,.1);padding:1px 5px}
+.ed-guide ol{margin:8px 0 0 20px}
+.ed-guide li{margin-bottom:4px}
+.draft-flag{display:inline-block;font-family:'IBM Plex Mono',monospace;font-size:10px;letter-spacing:.12em;
+  text-transform:uppercase;color:#fff;background:var(--accent);padding:3px 8px;margin-left:8px}
+@media (prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<!-- ===================================================================
+     ВЕСЬ ТЕКСТ ВПРАВИ ЖИВЕ ТУТ.
+     Редагувати найзручніше через вбудований редактор: додай ?edit
+     до адреси файлу і відкрий. Правити руками тут теж можна.
+     =================================================================== -->
+<script type="application/json" id="gameConfig">
+{
+  "meta": {
+    "title": "Приймання роботи",
+    "subtitle": "Заняття 2 · Моделювання та Текстури",
+    "heroHeading": "Прийми купальник перед виробництвом",
+    "heroLead": "На стіл поклали купальник, зшитий у CLO. Твоя роль: пройти по всіх пунктах і сказати по кожному, чи роботу можна пускати далі. Після кожного пункту — примітка з поясненням.",
+    "startLabel": "Поїхали →",
+    "footNote": "Курс CLO 3D · Заняття 2 · Матеріал для самоперевірки",
+    "fileName": "index.html",
+    "pageTitle": "Приймання роботи — CLO 3D, Заняття 2",
+    "actCaption": "Акт приймання"
+  },
+  "rules": [
+    "Шість пунктів, у кожному одне рішення з чотирьох.",
+    "Відповідь незворотна.",
+    "Після кожного пункту — примітка з поясненням і посилання на тему заняття.",
+    "У фіналі — висновок і чек-ліст ДЗ №2."
+  ],
+  "blocks": {
+    "1": "Зшивання та посадка на манекен",
+    "2": "Моделювання деталей",
+    "3": "Тканина і матеріали",
+    "4": "Діагностика та симуляція"
+  },
+  "topics": {
+    "t_sew": {
+      "title": "Заняття 2 · Зшивання та «одягання» виробу",
+      "url": ""
+    },
+    "t_lines": {
+      "title": "Заняття 2 · Внутрішні лінії, Cut & Sew, Trace",
+      "url": ""
+    },
+    "t_fabric": {
+      "title": "Заняття 2 · Фізичні властивості тканини, колір і блиск",
+      "url": ""
+    },
+    "t_maps": {
+      "title": "Заняття 2 · Stress, Strain і Fit Map",
+      "url": ""
+    },
+    "t_pd": {
+      "title": "Заняття 2 · Particle Distance",
+      "url": ""
+    }
+  },
+  "steps": [
+    {
+      "id": "p1",
+      "block": 1,
+      "topic": "t_sew",
+      "topicName": "Напрямок ліній зшивання",
+      "situation": "Тиснеш Simulate — і бічна деталь купальника вивертається навиворіт, тканина перекручується вісімкою.",
+      "ask": "В чому причина?",
+      "options": [
+        "У напрямку ліній зшивання: перекручений шов вивертає деталь",
+        "У Particle Distance: крок сітки завеликий для вузької деталі",
+        "У тканині: вона надто еластична для купальника",
+        "У Fit Map: деталь поставлена занадто близько до тіла"
+      ],
+      "correct": 0,
+      "explain": "CLO зшиває зрізи за напрямком: початок до початку, кінець до кінця. Якщо один зріз вказано у зворотному напрямку, шов перехрещується — і деталь вивертається на першій же симуляції. Перевіряти лінії зшивання варто до Simulate: потім ти шукаєш причину вже серед зім'ятої тканини."
+    },
+    {
+      "id": "p2",
+      "block": 1,
+      "topic": "t_sew",
+      "topicName": "Різна довжина зрізів у шві",
+      "situation": "Ти зшив/-ла два зрізи, але один з них на 4 см довший за другий. Помилки програма не показала.",
+      "ask": "Що побачиш після симуляції?",
+      "options": [
+        "Надлишок зіб'ється у зборку по шву — або вирівнюй лекало, або це задум",
+        "CLO автоматично підріже зайву довжину під короткий зріз",
+        "Симуляція не запуститься, поки довжини не зійдуться",
+        "Зайве піде у припуск на шов і не буде видно"
+      ],
+      "correct": 0,
+      "explain": "CLO не редагує твоє лекало сама: вона чесно зшиває те, що дали, і надлишок довжини кудись мусить піти. Він іде у зборку — хвилю по шву. Іноді це саме те, що потрібно (зборка на чашці, рюш), але якщо ти цього не планував/-ла, це дефект: різниця довжин виправляється в лекалі, а не тканиною."
+    },
+    {
+      "id": "p3",
+      "block": 2,
+      "topic": "t_lines",
+      "topicName": "Що робить внутрішня лінія",
+      "situation": "Ти провів/-ла внутрішню лінію по майбутній лінії кокетки й запустив/-ла симуляцію. Деталь не розділилася — залишилась цілою.",
+      "ask": "Чому?",
+      "options": [
+        "Внутрішня лінія лише розмічає лекало, вона нічого не ріже",
+        "Лінія проведена не до кінця, тому розріз не спрацював",
+        "Розріз з'являється тільки після другої симуляції",
+        "Внутрішні лінії працюють лише на симетричних деталях"
+      ],
+      "correct": 0,
+      "explain": "Внутрішня лінія — це розмітка на лекалі, як лінія олівцем на папері. Вона потрібна як опора: для перегину, для декоративної строчки, для подальшого розрізу. Але щоб деталь справді розділилася й частини лишилися зшитими, потрібен Cut & Sew — саме він ріже по цій лінії й одразу прокладає між частинами шов."
+    },
+    {
+      "id": "p5",
+      "block": 3,
+      "topic": "t_fabric",
+      "topicName": "Тканина як інструмент формотворення",
+      "situation": "Основа спідниці складається з двох частин. У передній частині тканина лягає м'якими складками, у задній стоїть майже конусом. Лекало ідентичне.",
+      "ask": "У чому причина?",
+      "options": [
+        "Фізичні властивості тканини: вага і жорсткість формують силует",
+        "Різний колір і рівень блиску матеріалу",
+        "Різне значення Particle Distance",
+        "Різна кількість внутрішніх ліній на лекалі"
+      ],
+      "correct": 0,
+      "explain": "Фізика матеріалу — це половина силуету. Вага, жорсткість на згин і на розтяг вирішують, чи впаде тканина складками, чи триматиме форму. Тому вибір тканини в CLO — це конструкторське рішення: змінивши матеріал, ти змінюєш виріб, навіть не торкаючись лекала."
+    },
+    {
+      "id": "p7",
+      "block": 4,
+      "topic": "t_maps",
+      "topicName": "Stress, Strain і Fit Map — що яка показує",
+      "situation": "Дивишся на купальник у режимі карти. У зоні стегна видно, що тканина розтягнулася на 18% більше за розмір лекала.",
+      "ask": "Яку карту ти читаєш?",
+      "options": [
+        "Strain Map — відсоток деформації тканини",
+        "Stress Map — силу напруги в тканині",
+        "Fit Map — відстань між тканиною і тілом",
+        "Це не карта, а показник Particle Distance"
+      ],
+      "correct": 0,
+      "explain": "Три карти відповідають на три різні питання. Strain — на скільки відсотків тканина розтягнулася відносно лекала. Stress — з якою силою вона при цьому працює, тобто де перетяг. Fit — де прилягає щільно, а де є зазор. Відсоток розтягу це завжди Strain, і для купальника саме він показує, чи вкладаєшся в еластичність трикотажу."
+    },
+    {
+      "id": "p8",
+      "block": 4,
+      "topic": "t_pd",
+      "topicName": "Particle Distance — баланс якості й швидкості",
+      "situation": "Готуєш фінальний кадр. Драпіровка на боці виглядає грубою й кутастою, хочеться м'якше.",
+      "ask": "Що робити?",
+      "options": [
+        "Зменшити Particle Distance точково на цій деталі перед фінальною симуляцією",
+        "Зменшити Particle Distance на всьому виробі й працювати так від початку",
+        "Збільшити Particle Distance, щоб симуляція встигала за складками",
+        "Підняти блиск матеріалу, щоб складки читалися виразніше"
+      ],
+      "correct": 0,
+      "explain": "Particle Distance — крок сітки симуляції: чим менший, тим дрібніші складки CLO здатна порахувати і тим повільніше рахує. Робоче правило: усе моделювання роби на великому кроці, а зменшуй точково — тільки на деталях, де важлива пластика, і тільки перед фінальною симуляцією. Малий крок на всьому виробі з самого початку — найшвидший спосіб згаяти вечір на очікування."
+    }
+  ],
+  "homework": [
+    {
+      "id": "hw1",
+      "title": "Авторський дизайн купальника на базовій основі",
+      "note": ""
+    },
+    {
+      "id": "hw2",
+      "title": "Файл проєкту (.zprj)",
+      "note": ""
+    },
+    {
+      "id": "hw3",
+      "title": "Зображення обраного референсу",
+      "note": ""
+    }
+  ],
+  "ranks": [
+    {
+      "min": 8,
+      "name": "Експерт",
+      "desc": "Вісім з восьми. Ти розділяєш, де працює лекало, де тканина, а де карта відповідає не на те питання, яке ти ставиш."
+    },
+    {
+      "min": 6,
+      "name": "Допуск із зауваженнями",
+      "desc": "Основне тримаєш. Перечитай примітки до пунктів, де не зійшлося: зазвичай це один інструмент, який робить не те, що від нього очікують."
+    },
+    {
+      "min": 4,
+      "name": "Потрібне доналаштування",
+      "desc": "Половина інструментів упізнається, логіка — ще ні. Перед ДЗ №2 передивись позначені теми."
+    },
+    {
+      "min": 0,
+      "name": "Спробуй ще раз",
+      "desc": "Зшивання, тканина й карти поки що зливаються в одне — це нормально, заняття щільне. Прочитай примітки нижче, передивись запис і пройди ще раз."
+    }
+  ]
+}
+</script>
+
+<div class="wrap">
+
+  <!-- ============ EDITOR ============ -->
+  <div id="editorRoot" class="hidden">
+    <div class="editbar">
+      <div class="eb-title">Режим редагування<small id="ebFile"></small></div>
+      <button class="eb-btn" id="ebPreview">Переглянути</button>
+      <button class="eb-btn" id="ebRevert">Скинути правки</button>
+      <button class="eb-btn primary" id="ebExport">Завантажити файл</button>
+      <div class="eb-status" id="ebStatus"></div>
+    </div>
+
+    <div class="ed-guide">
+      <b>Як це працює.</b> Правки зберігаються у твоєму браузері одразу, поки ти друкуєш — студенти їх не бачать.
+      <ol>
+        <li><b>Переглянути</b> — пройти вправу з новими текстами й перевірити, як читається.</li>
+        <li><b>Завантажити файл</b> — отримати новий <code>.html</code> з уже вшитими текстами.</li>
+        <li>Замінити ним старий файл на сайті чи в LMS. Усе, публікація оновлена.</li>
+      </ol>
+      Щоб знову відкрити редактор, додай <code>?edit</code> в кінець адреси файлу.
+    </div>
+
+    <div class="ed-sec">
+      <h3>Кроки вправи</h3>
+      <p class="ed-hint">Зелена галочка позначає правильний варіант. Порядок варіантів на екрані студента перемішується автоматично.</p>
+      <div id="edSteps"></div>
+      <button class="ed-add" id="edAddStep">+ Додати крок</button>
+    </div>
+
+    <div class="ed-sec">
+      <h3>Теми заняття та посилання</h3>
+      <p class="ed-hint">Сюди вставляються таймкод-посилання на запис. Порожнє поле — назва теми покажеться просто текстом.</p>
+      <div id="edTopics"></div>
+    </div>
+
+    <div class="ed-sec">
+      <h3>Чек-ліст ДЗ</h3>
+      <div id="edHomework"></div>
+    </div>
+
+    <div class="ed-sec">
+      <h3>Звання у фіналі</h3>
+      <p class="ed-hint">«Від» — мінімальна кількість вірних рішень для цього звання.</p>
+      <div id="edRanks"></div>
+    </div>
+
+    <div class="ed-sec">
+      <h3>Шапка та вступ</h3>
+      <div id="edMeta"></div>
+    </div>
+  </div>
+
+  <!-- ============ GAME ============ -->
+  <div id="gameRoot">
+
+  <div class="titleblock">
+    <div class="tb-main">
+      <h1 id="metaTitle">Наряд-замовлення №001</h1>
+      <div class="sub" id="metaSubtitle">Заняття 1 · Старт у CLO 3D: Аватар та База</div>
+    </div>
+    <div class="tb-cells">
+      <div class="tb-cell">Пункт<b id="tbStep">00 / 12</b></div>
+      <div class="tb-cell">Блок<b id="tbBlock">—</b></div>
+    </div>
+  </div>
+
+  <div class="actbar">
+    <div class="act-head">
+      <span class="act-label" id="actCaption">Акт приймання</span>
+      <span class="act-label" id="actCount">0 / 8</span>
+    </div>
+    <div class="act-cells" id="actCells"></div>
+  </div>
+
+  <section class="sheet" id="screenIntro">
+    <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+    <span class="notch top"></span><span class="notch bot"></span><span class="notch lft"></span><span class="notch rgt"></span>
+    <div class="hero">
+      <div>
+        <div class="eyebrow" id="metaEyebrow">Заняття 1 · 12 кроків · 4 блоки</div>
+        <h2 id="metaHeading" style="font-size:clamp(23px,5.3vw,33px);margin-top:8px;text-transform:uppercase;color:var(--blue-deep)">Налаштуй робоче місце</h2>
+        <p class="lead" id="metaLead"></p>
+        <ul class="rules" id="metaRules"></ul>
+        <div class="blocks-preview" id="metaBlocks"></div>
+        <div style="margin-top:26px;display:flex;gap:12px;flex-wrap:wrap;align-items:center">
+          <button class="btn accent" id="btnStart">Відкрити наряд</button>
+          <button class="btn ghost hidden" id="btnResume">Продовжити з пункту <span id="resumeAt"></span></button>
+        </div>
+      </div>
+      <div class="hero-art">
+        <svg viewBox="0 0 260 340" fill="none" xmlns="http://www.w3.org/2000/svg" style="width:100%;height:auto" aria-label="Лекало купальника із зонами перевірки посадки">
+          <path d="M96 40 C90 70, 84 108, 84 140 C84 162, 92 168, 92 182
+                   C92 200, 84 204, 84 216 C85 232, 90 242, 96 252
+                   C112 240, 122 230, 130 228 C138 230, 148 240, 164 252
+                   C170 242, 175 232, 176 216 C176 204, 168 200, 168 182
+                   C168 168, 176 162, 176 140 C176 108, 170 70, 164 40
+                   L148 40 C151 66, 150 84, 130 104 C110 84, 109 66, 112 40 Z" stroke="#153E6B" stroke-width="2" fill="rgba(43,101,164,.07)" stroke-linejoin="round"></path>
+          <path d="M130 108 L130 228" stroke="#2B65A4" stroke-width="1" stroke-dasharray="5 4" opacity=".85"></path>
+          <path d="M86 140 L174 140" stroke="#2B65A4" stroke-width="1" stroke-dasharray="4 4" opacity=".55"></path>
+          <path d="M86 216 L174 216" stroke="#2B65A4" stroke-width="1" stroke-dasharray="4 4" opacity=".55"></path>
+          <path d="M76 140 L84 140 M184 140 L176 140" stroke="#153E6B" stroke-width="2"></path>
+          <path d="M130 234 L130 224" stroke="#153E6B" stroke-width="2"></path>
+          <circle cx="110" cy="138" r="19" stroke="#E0492C" stroke-width="1.6" stroke-dasharray="5 4" fill="rgba(224,73,44,.10)"></circle>
+          <circle cx="156" cy="210" r="15" stroke="#E0492C" stroke-width="1.6" stroke-dasharray="5 4" fill="rgba(224,73,44,.10)"></circle>
+          <path d="M92 129 L52 108" stroke="#E0492C" stroke-width="1"></path>
+          <path d="M170 215 L212 228" stroke="#E0492C" stroke-width="1"></path>
+          <text x="34" y="105" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#E0492C">!</text>
+          <text x="216" y="232" font-family="IBM Plex Mono, monospace" font-size="13" font-weight="600" fill="#E0492C">!</text>
+          <rect x="72" y="286" width="29" height="11" fill="rgba(43,101,164,.18)" stroke="#153E6B" stroke-width="1"></rect>
+          <rect x="101" y="286" width="29" height="11" fill="rgba(43,101,164,.45)" stroke="#153E6B" stroke-width="1"></rect>
+          <rect x="130" y="286" width="29" height="11" fill="rgba(224,73,44,.45)" stroke="#153E6B" stroke-width="1"></rect>
+          <rect x="159" y="286" width="29" height="11" fill="rgba(224,73,44,.85)" stroke="#153E6B" stroke-width="1"></rect>
+          <text x="72" y="314" font-family="IBM Plex Mono, monospace" font-size="10" letter-spacing="1.4" fill="#54718D">STRESS MAP</text>
+        </svg>
+      </div>
+    </div>
+  </section>
+
+  <section class="sheet hidden" id="screenQ">
+    <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+    <span class="notch top"></span><span class="notch bot"></span><span class="notch lft"></span><span class="notch rgt"></span>
+    <div class="q-head">
+      <div class="eyebrow" id="qNum">Пункт 01 / 8</div>
+      <span class="chip" id="qBlock"></span>
+    </div>
+    <div class="field-label">Ситуація</div>
+    <div class="situation" id="qSituation"></div>
+    <div class="ask" id="qAsk">Що робити?</div>
+    <div class="opts" id="qOpts"></div>
+    <div class="verdict hidden" id="qVerdict">
+      <div class="stamp" id="vStamp"></div>
+      <div class="answer-note" id="vNote"></div>
+      <div class="explain">
+        <div class="explain-label">Примітка</div>
+        <div id="vExplain"></div>
+      </div>
+      <a class="lesson-link" id="vLesson"><span>↗</span><span id="vLessonText"></span></a>
+      <div class="q-foot"><button class="btn" id="btnNext">Наступний крок</button></div>
+    </div>
+  </section>
+
+  <section id="screenResult" class="hidden">
+    <div class="sheet">
+      <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+      <span class="notch top"></span><span class="notch bot"></span>
+      <div class="result-top">
+        <div class="big-stamp">
+          <div class="bs-label">Висновок за актом</div>
+          <div class="bs-rank" id="rRank"></div>
+          <div class="bs-score" id="rScore"></div>
+        </div>
+        <p class="rank-desc" id="rDesc"></p>
+      </div>
+    </div>
+    <div class="sheet">
+      <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+      <span class="notch top2"></span><span class="notch rgt"></span>
+      <div class="eyebrow" style="margin-bottom:14px">Розкладка по блоках</div>
+      <div class="mod-bars" id="rBlocks"></div>
+    </div>
+    <div class="sheet" id="rReviewSheet">
+      <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+      <span class="notch top"></span><span class="notch lft"></span>
+      <div class="eyebrow" id="rReviewTitle" style="margin-bottom:6px">Переглянути в записі</div>
+      <ul class="review-list" id="rReview"></ul>
+    </div>
+    <div class="sheet">
+      <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+      <span class="notch top2"></span><span class="notch lft"></span>
+      <div class="eyebrow" style="margin-bottom:4px">Чек-ліст ДЗ №2</div>
+      <p style="font-size:13.5px;color:var(--ink-soft);margin-bottom:8px">Відмічай по мірі виконання — збережеться.</p>
+      <div id="rHomework"></div>
+      <p id="hwDone" class="hidden" style="margin-top:14px;font-family:'IBM Plex Mono',monospace;font-size:12px;letter-spacing:.08em;color:var(--green);text-transform:uppercase">✓ ДЗ №2 готове до здачі</p>
+    </div>
+    <div class="sheet">
+      <span class="crop tl"></span><span class="crop tr"></span><span class="crop bl"></span><span class="crop br"></span>
+      <span class="notch bot"></span><span class="notch rgt"></span>
+      <div class="eyebrow" style="margin-bottom:14px">Акт · усі пункти</div>
+      <table class="proto">
+        <thead><tr><th>№</th><th></th><th>Пункт</th><th>Правильне рішення</th></tr></thead>
+        <tbody id="rProto"></tbody>
+      </table>
+    </div>
+    <div class="result-actions"><button class="btn accent" id="btnRestart">Пройти заново</button></div>
+    <div class="foot-note" id="metaFoot"></div>
+  </section>
+
+  </div><!-- /gameRoot -->
+</div>
+
+<script>
+/* Знімок оригінальної розмітки робиться до будь-яких змін DOM —
+   з нього збирається файл на експорт. */
+const PRISTINE_HTML = "<!DOCTYPE html>\n" + document.documentElement.outerHTML;
+
+const SLUG = "clo3d-z1-naryad-zamovlennya";
+const DRAFT_KEY = SLUG + ":draft";
+const CFG_RE = /(<script type="application\/json" id="gameConfig">)([\s\S]*?)(<\/script>)/;
+
+const BASE_CFG = JSON.parse(document.getElementById("gameConfig").textContent);
+let CFG = JSON.parse(JSON.stringify(BASE_CFG));
+
+const KEYS = ["А","Б","В","Г","Д","Е"];
+let state = { idx:0, answers:[], done:false, hw:{} };
+const $ = id => document.getElementById(id);
+const clone = o => JSON.parse(JSON.stringify(o));
+const esc = s => String(s).replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+
+/* ---------- storage ---------- */
+async function sSet(k,v){
+  try{ if(window.storage && window.storage.set){ await window.storage.set(k,v,false); return; } }catch(e){}
+  try{ localStorage.setItem(k,v); }catch(e){}
+}
+async function sGet(k){
+  try{ if(window.storage && window.storage.get){ const r=await window.storage.get(k,false); if(r&&r.value) return r.value; } }catch(e){}
+  try{ return localStorage.getItem(k); }catch(e){ return null; }
+}
+async function sDel(k){
+  try{ if(window.storage && window.storage.delete){ await window.storage.delete(k,false); } }catch(e){}
+  try{ localStorage.removeItem(k); }catch(e){}
+}
+const saveState = () => sSet(SLUG, JSON.stringify(state));
+const saveDraft = () => sSet(DRAFT_KEY, JSON.stringify(CFG));
+
+/* ---------- shared helpers ---------- */
+function seededOrder(seed, n){
+  let s = 2166136261;
+  for(let i=0;i<seed.length;i++){ s ^= seed.charCodeAt(i); s = Math.imul(s,16777619) >>> 0; }
+  const rnd = () => { s ^= s<<13; s>>>=0; s ^= s>>>17; s ^= s<<5; s>>>=0; return s/4294967296; };
+  const arr = Array.from({length:n},(_,i)=>i);
+  for(let i=n-1;i>0;i--){ const j=Math.floor(rnd()*(i+1)); [arr[i],arr[j]]=[arr[j],arr[i]]; }
+  return arr;
+}
+const pad = n => String(n).padStart(2,"0");
+const total = () => CFG.steps.length;
+function plural(n, one, few, many){
+  const m10 = n % 10, m100 = n % 100;
+  if(m10 === 1 && m100 !== 11) return one;
+  if(m10 >= 2 && m10 <= 4 && (m100 < 12 || m100 > 14)) return few;
+  return many;
+}
+
+/* =====================================================================
+   GAME
+   ===================================================================== */
+function paintStatic(){
+  document.title = CFG.meta.pageTitle || (CFG.meta.title + " — " + CFG.meta.subtitle);
+  $("metaTitle").textContent = CFG.meta.title;
+  $("metaSubtitle").textContent = CFG.meta.subtitle;
+  $("metaHeading").textContent = CFG.meta.heroHeading;
+  $("metaLead").textContent = CFG.meta.heroLead;
+  $("btnStart").textContent = CFG.meta.startLabel;
+  $("metaFoot").textContent = CFG.meta.footNote;
+  if(CFG.meta.actCaption) $("actCaption").textContent = CFG.meta.actCaption;
+  const usedBlocks = Object.keys(CFG.blocks).filter(k => CFG.steps.some(st => String(st.block) === String(k)));
+  const nb = usedBlocks.length;
+  $("metaEyebrow").textContent = CFG.meta.subtitle.split("·")[0].trim() + " · " +
+    total() + " " + plural(total(),"пункт","пункти","пунктів") + " · " +
+    nb + " " + plural(nb,"блок","блоки","блоків");
+  $("metaRules").innerHTML = CFG.rules.map(r => "<li>"+esc(r)+"</li>").join("");
+  $("metaBlocks").innerHTML = usedBlocks.map(k => '<span class="blk-chip">'+esc(CFG.blocks[k])+'</span>').join("");
+  $("actCount").textContent = "0 / " + total();
+  $("tbStep").textContent = "00 / " + total();
+}
+
+function renderAct(animateIdx){
+  const box = $("actCells");
+  box.innerHTML = "";
+  for(let i = 0; i < total(); i++){
+    const a = state.answers[i];
+    const c = document.createElement("div");
+    let cls = "act-cell";
+    if(a != null) cls += a.ok ? " ok" : " no";
+    else if(i === state.idx && !state.done) cls += " cur";
+    if(i === animateIdx) cls += " pop";
+    c.className = cls;
+    c.textContent = a != null ? (a.ok ? "✓" : "✕") : String(i + 1);
+    box.appendChild(c);
+  }
+  const done = state.answers.filter(a => a != null).length;
+  $("actCount").textContent = done + " / " + total();
+}
+
+function show(screen){
+  ["screenIntro","screenQ","screenResult"].forEach(s => $(s).classList.toggle("hidden", s!==screen));
+}
+
+function renderStep(){
+  const st = CFG.steps[state.idx];
+  const answered = state.answers[state.idx];
+  $("tbStep").textContent = pad(state.idx+1)+" / "+total();
+  $("tbBlock").textContent = "Б"+st.block;
+  $("qNum").textContent = "Пункт "+pad(state.idx+1)+" / "+total();
+  $("qBlock").textContent = "Блок "+st.block+" · "+(CFG.blocks[st.block]||"");
+  $("qSituation").textContent = st.situation;
+  $("qAsk").textContent = st.ask;
+
+  const box = $("qOpts"); box.innerHTML = "";
+  const order = seededOrder(st.id, st.options.length);
+  order.forEach((orig, slot) => {
+    const b = document.createElement("button");
+    b.className = "opt"; b.type = "button";
+    b.innerHTML = '<span class="key"><span>'+KEYS[slot]+'</span></span><span>'+esc(st.options[orig])+'</span>';
+    if(answered != null){
+      b.disabled = true;
+      if(orig === st.correct) b.classList.add("correct");
+      else if(orig === answered.pick) b.classList.add("wrong");
+      else b.classList.add("dim");
+    }else b.addEventListener("click", () => pick(orig));
+    box.appendChild(b);
+  });
+
+  if(answered != null) renderVerdict(st, answered.pick);
+  else $("qVerdict").classList.add("hidden");
+  $("btnNext").textContent = (state.idx === total()-1) ? "Підписати акт" : "Наступний пункт";
+  renderAct(-1);
+  show("screenQ");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+function renderVerdict(st, picked){
+  const ok = picked === st.correct;
+  const stamp = $("vStamp");
+  stamp.className = "stamp " + (ok?"ok":"no");
+  stamp.textContent = ok ? "Зараховано" : "Не зараховано";
+  $("vNote").innerHTML = ok
+    ? 'Правильне рішення: <b>'+esc(st.options[st.correct])+'</b>'
+    : 'Ти обрав: <b>'+esc(st.options[picked])+'</b> · Правильно: <b>'+esc(st.options[st.correct])+'</b>';
+  $("vExplain").textContent = st.explain;
+  const T = CFG.topics[st.topic] || {title:"",url:""};
+  const link = $("vLesson");
+  $("vLessonText").textContent = T.title;
+  if(T.url){ link.href=T.url; link.target="_blank"; link.rel="noopener"; link.classList.remove("static"); }
+  else { link.removeAttribute("href"); link.classList.add("static"); }
+  $("qVerdict").classList.remove("hidden");
+}
+
+function pick(i){
+  state.answers[state.idx] = { pick:i, ok: i === CFG.steps[state.idx].correct };
+  saveState();
+  renderAct(state.idx);
+  const st = CFG.steps[state.idx];
+  const order = seededOrder(st.id, st.options.length);
+  document.querySelectorAll("#qOpts .opt").forEach((b,slot) => {
+    b.disabled = true;
+    const orig = order[slot];
+    if(orig === st.correct) b.classList.add("correct");
+    else if(orig === i) b.classList.add("wrong");
+    else b.classList.add("dim");
+  });
+  renderVerdict(st, i);
+  setTimeout(() => $("qVerdict").scrollIntoView({behavior:"smooth",block:"nearest"}), 120);
+}
+
+function renderHomework(){
+  const box = $("rHomework"); box.innerHTML = "";
+  CFG.homework.forEach(h => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = "check-item" + (state.hw[h.id] ? " on" : "");
+    b.innerHTML = '<span class="check-box"></span><span class="check-text"><b>'+esc(h.title)+'</b><small>'+esc(h.note)+'</small></span>';
+    b.setAttribute("aria-pressed", state.hw[h.id] ? "true":"false");
+    b.addEventListener("click", () => { state.hw[h.id] = !state.hw[h.id]; saveState(); renderHomework(); });
+    box.appendChild(b);
+  });
+  $("hwDone").classList.toggle("hidden", !CFG.homework.every(h => state.hw[h.id]));
+}
+
+function renderResult(){
+  const score = state.answers.filter(a => a && a.ok).length;
+  const rank = [...CFG.ranks].sort((a,b)=>b.min-a.min).find(r => score >= r.min) || CFG.ranks[CFG.ranks.length-1];
+  $("rRank").textContent = rank.name;
+  $("rScore").textContent = score+" / "+total()+" "+plural(score,"вірне рішення","вірні рішення","вірних рішень");
+  $("rDesc").textContent = rank.desc;
+  $("tbStep").textContent = "ВСІ / "+total();
+  $("tbBlock").textContent = "★";
+
+  const blocks = {};
+  CFG.steps.forEach((st,i) => {
+    if(!blocks[st.block]) blocks[st.block] = {ok:0,total:0};
+    blocks[st.block].total++;
+    if(state.answers[i] && state.answers[i].ok) blocks[st.block].ok++;
+  });
+  const bb = $("rBlocks"); bb.innerHTML = "";
+  Object.keys(blocks).sort().forEach(k => {
+    const s = blocks[k], pct = (s.ok/s.total)*100;
+    const cls = pct===100 ? "full" : (pct<=34 ? "low" : "");
+    const row = document.createElement("div"); row.className = "mod-row";
+    row.innerHTML = '<div><div class="mod-name"><span class="mn">Б'+k+'</span>'+esc(CFG.blocks[k]||"")+'</div>'+
+      '<div class="mod-track"><div class="mod-fill '+cls+'" style="width:'+pct+'%"></div></div></div>'+
+      '<div class="mod-score">'+s.ok+' з '+s.total+'</div>';
+    bb.appendChild(row);
+  });
+
+  const missed = CFG.steps.filter((st,i) => !(state.answers[i] && state.answers[i].ok));
+  const rl = $("rReview"); rl.innerHTML = "";
+  if(missed.length === 0){
+    $("rReviewTitle").textContent = "Переглядати нічого";
+    rl.innerHTML = '<li><span class="rl-topic">Усі кроки з першого разу. Робоче місце налаштоване — берись за ДЗ.</span></li>';
+  }else{
+    const byTopic = {};
+    missed.forEach(st => { (byTopic[st.topic] = byTopic[st.topic] || []).push(st.topicName); });
+    const n = Object.keys(byTopic).length;
+    $("rReviewTitle").textContent = "Переглянути в записі · "+n+" "+plural(n,"тема","теми","тем");
+    Object.keys(byTopic).forEach(k => {
+      const T = CFG.topics[k] || {title:k,url:""};
+      const label = T.url
+        ? '<a class="lesson-link" style="margin-top:0" href="'+esc(T.url)+'" target="_blank" rel="noopener"><span>↗</span><span>'+esc(T.title)+'</span></a>'
+        : '<span class="rl-topic">'+esc(T.title)+'</span>';
+      const li = document.createElement("li");
+      li.innerHTML = '<span class="rl-num">●</span>'+label+'<span class="rl-why">'+esc(byTopic[k].join(" · "))+'</span>';
+      rl.appendChild(li);
+    });
+  }
+
+  const tb = $("rProto"); tb.innerHTML = "";
+  CFG.steps.forEach((st,i) => {
+    const a = state.answers[i], ok = a && a.ok;
+    const tr = document.createElement("tr");
+    tr.innerHTML = '<td>'+pad(i+1)+'</td><td class="mk '+(ok?"ok":"no")+'">'+(ok?"✓":"✕")+'</td>'+
+      '<td>'+esc(st.topicName)+'</td><td>'+esc(st.options[st.correct])+'</td>';
+    tb.appendChild(tr);
+  });
+
+  renderHomework();
+  show("screenResult");
+  window.scrollTo({top:0,behavior:"smooth"});
+}
+
+$("btnStart").addEventListener("click", () => {
+  state = { idx:0, answers:[], done:false, hw: state.hw||{} };
+  saveState(); renderAct(-1); renderStep();
+});
+$("btnResume").addEventListener("click", () => { state.done ? renderResult() : renderStep(); });
+$("btnNext").addEventListener("click", () => {
+  if(state.idx === total()-1){ state.done = true; saveState(); renderResult(); }
+  else { state.idx++; saveState(); renderStep(); }
+});
+$("btnRestart").addEventListener("click", async () => {
+  const hw = state.hw||{};
+  await sDel(SLUG);
+  state = { idx:0, answers:[], done:false, hw };
+  await saveState();
+  renderAct(-1);
+  $("btnResume").classList.add("hidden");
+  show("screenIntro");
+  window.scrollTo({top:0,behavior:"smooth"});
+});
+
+/* =====================================================================
+   EDITOR
+   ===================================================================== */
+const isEdit = /(\?|&)edit\b/.test(location.search) || location.hash === "#edit";
+
+function field(label, value, type, oninput, attrs){
+  const w = document.createElement("div"); w.className = "ed-field";
+  const l = document.createElement("label"); l.textContent = label; w.appendChild(l);
+  const el = document.createElement(type === "textarea" ? "textarea" : (type === "select" ? "select" : "input"));
+  if(type === "textarea") el.rows = attrs && attrs.rows || 3;
+  else if(type === "select"){ (attrs.options||[]).forEach(o => {
+      const op = document.createElement("option"); op.value = o.value; op.textContent = o.label; el.appendChild(op); }); }
+  else el.type = type || "text";
+  el.value = value == null ? "" : value;
+  el.addEventListener("input", e => { oninput(e.target.value); markDirty(); });
+  w.appendChild(el); return w;
+}
+
+let dirtyTimer = null;
+function markDirty(){
+  $("ebStatus").textContent = "Збереження…";
+  clearTimeout(dirtyTimer);
+  dirtyTimer = setTimeout(async () => {
+    await saveDraft();
+    const t = new Date();
+    $("ebStatus").textContent = "Чернетку збережено о " + pad(t.getHours()) + ":" + pad(t.getMinutes()) +
+      " · не забудь натиснути «Завантажити файл»";
+  }, 400);
+}
+
+function topicOptions(){
+  return Object.keys(CFG.topics).map(k => ({ value:k, label: CFG.topics[k].title || k }));
+}
+function blockOptions(){
+  return Object.keys(CFG.blocks).map(k => ({ value:k, label: "Блок "+k+" · "+CFG.blocks[k] }));
+}
+
+function problemsOf(st){
+  const p = [];
+  if(!st.situation.trim()) p.push("порожня ситуація");
+  if(!st.ask.trim()) p.push("немає питання");
+  if(st.options.filter(o=>o.trim()).length < 2) p.push("треба хоча б два варіанти");
+  if(st.correct == null || !st.options[st.correct] || !st.options[st.correct].trim()) p.push("не позначено правильний варіант");
+  return p;
+}
+function applyValidation(card, st){
+  const problems = problemsOf(st);
+  card.classList.toggle("invalid", problems.length > 0);
+  let w = card.querySelector(".ed-warn");
+  if(problems.length){
+    if(!w){ w = document.createElement("div"); w.className = "ed-warn"; card.appendChild(w); }
+    w.textContent = "⚠ " + problems.join(" · ");
+  }else if(w) w.remove();
+}
+
+function renderEditorSteps(){
+  const box = $("edSteps"); box.innerHTML = "";
+  CFG.steps.forEach((st, i) => {
+    const card = document.createElement("div");
+    card.className = "ed-card";
+
+    const head = document.createElement("div"); head.className = "ed-head";
+    head.innerHTML = '<span class="ed-idx">Пункт '+pad(i+1)+'</span>';
+    const tools = document.createElement("div"); tools.className = "ed-tools";
+    const mk = (txt,title,cls,fn,dis) => {
+      const b=document.createElement("button"); b.className="ed-tool"+(cls?" "+cls:""); b.textContent=txt;
+      b.title=title; b.setAttribute("aria-label",title); b.disabled=!!dis;
+      b.addEventListener("click",fn); return b;
+    };
+    tools.appendChild(mk("↑","Вгору","",()=>{ const s=CFG.steps; [s[i-1],s[i]]=[s[i],s[i-1]]; markDirty(); renderEditorSteps(); }, i===0));
+    tools.appendChild(mk("↓","Вниз","",()=>{ const s=CFG.steps; [s[i+1],s[i]]=[s[i],s[i+1]]; markDirty(); renderEditorSteps(); }, i===CFG.steps.length-1));
+    tools.appendChild(mk("⧉","Дублювати","",()=>{
+      const c = clone(st); c.id = "s"+Date.now().toString(36);
+      CFG.steps.splice(i+1,0,c); markDirty(); renderEditorSteps();
+    }));
+    tools.appendChild(mk("✕","Видалити","danger",()=>{
+      if(confirm("Видалити крок "+pad(i+1)+"?")){ CFG.steps.splice(i,1); markDirty(); renderEditorSteps(); }
+    }));
+    head.appendChild(tools);
+    card.appendChild(head);
+
+    const row = document.createElement("div"); row.className = "ed-row";
+    row.appendChild(field("Блок", String(st.block), "select", v => { st.block = Number(v); }, {options:blockOptions()}));
+    row.appendChild(field("Тема заняття", st.topic, "select", v => { st.topic = v; }, {options:topicOptions()}));
+    card.appendChild(row);
+
+    card.appendChild(field("Коротка назва теми (для протоколу й списку повторення)", st.topicName, "text", v => { st.topicName = v; }));
+    card.appendChild(field("Ситуація", st.situation, "textarea", v => { st.situation = v; applyValidation(card, st); }, {rows:3}));
+    card.appendChild(field("Питання", st.ask, "text", v => { st.ask = v; applyValidation(card, st); }));
+
+    const optsWrap = document.createElement("div"); optsWrap.className = "ed-field";
+    const lg = document.createElement("div"); lg.className = "ed-legend"; lg.textContent = "Варіанти · познач правильний";
+    optsWrap.appendChild(lg);
+    st.options.forEach((o, oi) => {
+      const r = document.createElement("div");
+      r.className = "ed-optrow" + (st.correct === oi ? " is-correct" : "");
+      const radio = document.createElement("label"); radio.className = "ed-radio";
+      radio.title = "Позначити правильним";
+      const inp = document.createElement("input");
+      inp.type = "radio"; inp.name = "correct-"+i; inp.checked = st.correct === oi;
+      inp.addEventListener("change", () => {
+        st.correct = oi; markDirty();
+        optsWrap.querySelectorAll(".ed-optrow").forEach((row,k) => row.classList.toggle("is-correct", k === oi));
+        applyValidation(card, st);
+      });
+      radio.appendChild(inp);
+      const tx = document.createElement("input");
+      tx.type = "text"; tx.value = o;
+      tx.addEventListener("input", e => { st.options[oi] = e.target.value; markDirty(); applyValidation(card, st); });
+      const del = document.createElement("button");
+      del.className = "ed-tool danger"; del.textContent = "✕"; del.title = "Видалити варіант";
+      del.disabled = st.options.length <= 2;
+      del.addEventListener("click", () => {
+        st.options.splice(oi,1);
+        if(st.correct === oi) st.correct = 0;
+        else if(st.correct > oi) st.correct--;
+        markDirty(); renderEditorSteps();
+      });
+      r.appendChild(radio); r.appendChild(tx); r.appendChild(del);
+      optsWrap.appendChild(r);
+    });
+    if(st.options.length < KEYS.length){
+      const add = document.createElement("button");
+      add.className = "ed-tool"; add.textContent = "+"; add.title = "Додати варіант";
+      add.style.marginTop = "4px";
+      add.addEventListener("click", () => { st.options.push(""); markDirty(); renderEditorSteps(); });
+      optsWrap.appendChild(add);
+    }
+    card.appendChild(optsWrap);
+
+    card.appendChild(field("Примітка з поясненням", st.explain, "textarea", v => { st.explain = v; }, {rows:4}));
+
+    applyValidation(card, st);
+    box.appendChild(card);
+  });
+}
+
+function renderEditorTopics(){
+  const box = $("edTopics"); box.innerHTML = "";
+  Object.keys(CFG.topics).forEach(k => {
+    const t = CFG.topics[k];
+    const card = document.createElement("div"); card.className = "ed-card";
+    const row = document.createElement("div"); row.className = "ed-row";
+    row.appendChild(field("Назва теми", t.title, "text", v => {
+      t.title = v;
+      document.querySelectorAll('#edSteps select option[value="'+k+'"]').forEach(op => { op.textContent = v || k; });
+    }));
+    row.appendChild(field("Посилання на запис (необов'язково)", t.url, "url", v => { t.url = v.trim(); }));
+    card.appendChild(row);
+    box.appendChild(card);
+  });
+}
+
+function renderEditorHomework(){
+  const box = $("edHomework"); box.innerHTML = "";
+  CFG.homework.forEach((h,i) => {
+    const card = document.createElement("div"); card.className = "ed-card";
+    const head = document.createElement("div"); head.className = "ed-head";
+    head.innerHTML = '<span class="ed-idx">Пункт '+(i+1)+'</span>';
+    const tools = document.createElement("div"); tools.className = "ed-tools";
+    const del = document.createElement("button");
+    del.className = "ed-tool danger"; del.textContent = "✕"; del.title = "Видалити пункт";
+    del.disabled = CFG.homework.length <= 1;
+    del.addEventListener("click", () => { CFG.homework.splice(i,1); markDirty(); renderEditorHomework(); });
+    tools.appendChild(del); head.appendChild(tools); card.appendChild(head);
+    card.appendChild(field("Назва пункту", h.title, "text", v => { h.title = v; }));
+    card.appendChild(field("Уточнення під назвою", h.note, "text", v => { h.note = v; }));
+    box.appendChild(card);
+  });
+  const add = document.createElement("button");
+  add.className = "ed-add"; add.textContent = "+ Додати пункт ДЗ";
+  add.addEventListener("click", () => {
+    CFG.homework.push({ id:"h"+Date.now().toString(36), title:"", note:"" });
+    markDirty(); renderEditorHomework();
+  });
+  box.appendChild(add);
+}
+
+function renderEditorRanks(){
+  const box = $("edRanks"); box.innerHTML = "";
+  CFG.ranks.forEach(r => {
+    const card = document.createElement("div"); card.className = "ed-card";
+    const row = document.createElement("div"); row.className = "ed-row";
+    row.appendChild(field("Від скількох вірних", r.min, "number", v => { r.min = Number(v)||0; }));
+    row.appendChild(field("Назва звання", r.name, "text", v => { r.name = v; }));
+    card.appendChild(row);
+    card.appendChild(field("Опис", r.desc, "textarea", v => { r.desc = v; }, {rows:3}));
+    box.appendChild(card);
+  });
+}
+
+function renderEditorMeta(){
+  const box = $("edMeta"); box.innerHTML = "";
+  const card = document.createElement("div"); card.className = "ed-card";
+  const m = CFG.meta;
+  card.appendChild(field("Заголовок у шапці", m.title, "text", v => { m.title = v; }));
+  card.appendChild(field("Підзаголовок", m.subtitle, "text", v => { m.subtitle = v; }));
+  card.appendChild(field("Заголовок на стартовому екрані", m.heroHeading, "text", v => { m.heroHeading = v; }));
+  card.appendChild(field("Вступний текст", m.heroLead, "textarea", v => { m.heroLead = v; }, {rows:4}));
+  card.appendChild(field("Напис на кнопці старту", m.startLabel, "text", v => { m.startLabel = v; }));
+  card.appendChild(field("Підпис унизу результатів", m.footNote, "text", v => { m.footNote = v; }));
+  card.appendChild(field("Назва вкладки браузера", m.pageTitle || "", "text", v => { m.pageTitle = v; document.title = v; }));
+  card.appendChild(field("Підпис над смугою прогресу", m.actCaption || "", "text", v => { m.actCaption = v; }));
+  const rw = document.createElement("div"); rw.className = "ed-field";
+  const lg = document.createElement("div"); lg.className = "ed-legend"; lg.textContent = "Правила на стартовому екрані";
+  rw.appendChild(lg);
+  CFG.rules.forEach((r,i) => {
+    const row = document.createElement("div"); row.className = "ed-optrow"; row.style.gridTemplateColumns = "1fr auto";
+    const tx = document.createElement("input"); tx.type = "text"; tx.value = r;
+    tx.addEventListener("input", e => { CFG.rules[i] = e.target.value; markDirty(); });
+    const del = document.createElement("button");
+    del.className = "ed-tool danger"; del.textContent = "✕"; del.title = "Видалити правило";
+    del.addEventListener("click", () => { CFG.rules.splice(i,1); markDirty(); renderEditorMeta(); });
+    row.appendChild(tx); row.appendChild(del); rw.appendChild(row);
+  });
+  const add = document.createElement("button");
+  add.className = "ed-tool"; add.textContent = "+"; add.title = "Додати правило"; add.style.marginTop = "4px";
+  add.addEventListener("click", () => { CFG.rules.push(""); markDirty(); renderEditorMeta(); });
+  rw.appendChild(add);
+  card.appendChild(rw);
+  box.appendChild(card);
+}
+
+function renderEditor(){
+  $("ebFile").textContent = CFG.meta.fileName;
+  renderEditorSteps(); renderEditorTopics(); renderEditorHomework(); renderEditorRanks(); renderEditorMeta();
+}
+
+$("edAddStep").addEventListener("click", () => {
+  CFG.steps.push({
+    id: "s" + Date.now().toString(36),
+    block: Number(Object.keys(CFG.blocks)[0]) || 1,
+    topic: Object.keys(CFG.topics)[0] || "",
+    topicName: "",
+    situation: "",
+    ask: "Що робити?",
+    options: ["", "", "", ""],
+    correct: 0,
+    explain: ""
+  });
+  markDirty();
+  renderEditorSteps();
+  const cards = document.querySelectorAll("#edSteps .ed-card");
+  const last = cards[cards.length - 1];
+  if(last){
+    last.scrollIntoView({behavior:"smooth", block:"center"});
+    const ta = last.querySelector("textarea");
+    if(ta) ta.focus();
+  }
+});
+
+/* ---- export ---- */
+function buildFile(){
+  const json = JSON.stringify(CFG, null, 2).replace(/</g, "\\u003c");
+  if(!CFG_RE.test(PRISTINE_HTML)) return null;
+  return PRISTINE_HTML.replace(CFG_RE, (m,a,b,c) => a + "\n" + json + "\n" + c);
+}
+$("ebExport").addEventListener("click", () => {
+  const html = buildFile();
+  if(!html){ alert("Не вдалося зібрати файл. Збережи сторінку і спробуй ще раз."); return; }
+  const blob = new Blob([html], {type:"text/html;charset=utf-8"});
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = CFG.meta.fileName || "vprava.html";
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1500);
+  $("ebStatus").textContent = "Файл зібрано. Заміни ним старий на сайті — і публікація оновлена.";
+});
+$("ebPreview").addEventListener("click", () => {
+  const bad = CFG.steps.findIndex(s => s.correct == null || !s.options[s.correct] || !s.options[s.correct].trim());
+  if(bad >= 0){ alert("У кроці "+pad(bad+1)+" не позначено правильний варіант."); return; }
+  location.href = location.pathname + location.search.replace(/[?&]edit\b/,"").replace(/^&/,"?");
+});
+$("ebRevert").addEventListener("click", async () => {
+  if(!confirm("Скинути всі правки до текстів, збережених у файлі?")) return;
+  await sDel(DRAFT_KEY);
+  CFG = clone(BASE_CFG);
+  renderEditor();
+  $("ebStatus").textContent = "Правки скинуто до версії з файлу.";
+});
+
+/* =====================================================================
+   BOOT
+   ===================================================================== */
+(async function init(){
+  const draft = await sGet(DRAFT_KEY);
+  if(draft){
+    try{
+      const d = JSON.parse(draft);
+      if(d && Array.isArray(d.steps) && d.steps.length) CFG = d;
+    }catch(e){}
+  }
+
+  if(isEdit){
+    $("gameRoot").classList.add("hidden");
+    $("editorRoot").classList.remove("hidden");
+    $("ebStatus").textContent = draft
+      ? "Показано збережену чернетку. Готово — натисни «Завантажити файл»."
+      : "Тексти взято з файлу. Правки зберігаються автоматично.";
+    renderEditor();
+    return;
+  }
+
+  paintStatic();
+  renderAct(-1);
+  const saved = await sGet(SLUG);
+  if(saved){
+    try{
+      const s = JSON.parse(saved);
+      if(s && Array.isArray(s.answers)){
+        state = { idx: Math.min(s.idx||0, total()-1), answers: s.answers.slice(0,total()), done: !!s.done, hw: s.hw||{} };
+        const done = state.answers.filter(a=>a!=null).length;
+        if(done > 0){
+          renderAct(-1);
+          $("resumeAt").textContent = state.done ? "· результат" : pad(state.idx+1);
+          $("btnResume").classList.remove("hidden");
+          $("btnStart").textContent = "Почати спочатку";
+          $("btnStart").classList.remove("accent");
+          $("btnResume").classList.remove("ghost");
+          $("btnResume").classList.add("accent");
+        }
+      }
+    }catch(e){}
+  }
+})();
+</script></body></html>
